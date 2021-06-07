@@ -48,7 +48,7 @@ class TrainOREvaluate(object):
         args = parser.parse_args(sys.argv[2:])
         print(args)
         
-        # TODO: Implement training loop here
+        # Implement training loop here
         model = MyAwesomeModel(args.input_size,args.hidden_size,args.output)
         criterion = nn.NLLLoss()
         optimizer = optim.Adam(model.parameters(), args.lr)
@@ -152,7 +152,7 @@ class TrainOREvaluate(object):
         args = parser.parse_args(sys.argv[2:])
         print(args)
         
-        # TODO: Implement evaluation logic here
+        # Implement evaluation logic here
         model = MyAwesomeModel(args.input_size,args.hidden_size,args.output)
         if args.load_model_from:
             #model = torch.load(args.load_model_from)
