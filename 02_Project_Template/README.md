@@ -1,4 +1,4 @@
-MLOps_DTU-1
+Project_Template
 ==============================
 
 MLOps_DTUclear
