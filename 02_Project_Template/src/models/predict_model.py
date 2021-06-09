@@ -25,21 +25,10 @@ def main(trained_model_filepath, raw_images_folder, predictions_filepath):
     logger = logging.getLogger(__name__)
     logger.info('Creating predictions using a pre-trained neural network')
 
-    parser = argparse.ArgumentParser(description='Training arguments')
-    parser.add_argument('--lr', default=0.001,type = int)
-    parser.add_argument('--epochs',default=20, type = int)
-    parser.add_argument('--input_size',default=784, type = int)
-    parser.add_argument('--hidden_size',default=256, type = int)
-    parser.add_argument('--output',default=10, type = int)
-    parser.add_argument('--batch_size',default=64, type = int)
-        
-        
-     # add any additional argument that you want
-    args = parser.parse_args(sys.argv[2:])
         
     # Load the trained model
     project_dir = Path(__file__).resolve().parents[2]
-    model = MyAwesomeModel(args.input_size,args.hidden_size,args.output)
+    model = MyAwesomeModel()
     state_dict = torch.load(project_dir.joinpath(trained_model_filepath))
     model.load_state_dict(state_dict)
     model.eval()                     # Sets the model to evaluation mode

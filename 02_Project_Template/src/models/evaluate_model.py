@@ -19,24 +19,10 @@ def main(data_filepath, trained_model_filepath):
     logger = logging.getLogger(__name__)
     logger.info('Evaluating a neural network using MNIST test data')
 
-    # Load the trained model
-    parser = argparse.ArgumentParser(description='Training arguments')
-    parser.add_argument('--lr', default=0.001,type = int)
-    parser.add_argument('--epochs',default=20, type = int)
-    parser.add_argument('--input_size',default=784, type = int)
-    parser.add_argument('--hidden_size',default=256, type = int)
-    parser.add_argument('--output',default=10, type = int)
-    parser.add_argument('--batch_size',default=64, type = int)
-        
-        
-    # add any additional argument that you want
-    args = parser.parse_args(sys.argv[2:])
-        
-    # Implement training loop here
      
 
     # Create the network and define the loss function and optimizer
-    model = MyAwesomeModel(args.input_size,args.hidden_size,args.output)
+    model = MyAwesomeModel()
     project_dir = Path(__file__).resolve().parents[2]
     state_dict = torch.load(project_dir.joinpath(trained_model_filepath))
     model.load_state_dict(state_dict)

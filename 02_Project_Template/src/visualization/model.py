@@ -33,9 +33,9 @@ class MyAwesomeModel(nn.Module):
         x = self.dropout(F.relu(self.fc1(x)))
         x = self.dropout(F.relu(self.fc2(x)))
         x = self.dropout(F.relu(self.fc3(x)))
+        
+        features = x
 
         # Output so no dropout here
         x = F.log_softmax(self.fc4(x), dim=1)
-        return x
-        
-        
+        return x, features
