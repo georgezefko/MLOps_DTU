@@ -7,10 +7,9 @@ import torch
 from torchvision import datasets, transforms
 
 
-@click.command()
-@click.argument('data_filepath',  type=click.Path(),default='data')
 
-def main(data_filepath):
+
+def data(data_filepath):
     """ Downloads and stores the MNIST training and test data into
         raw data (../DATA_FILEPATH/MNIST/raw) and into cleaned data ready
         to be analyzed (../DATA_FILEPATH/MNIST/processed)
@@ -23,14 +22,11 @@ def main(data_filepath):
     logger = logging.getLogger(__name__)
     logger.info('Download and store the training and test data')
     project_dir = Path(__file__).resolve().parents[2]
-    _ = datasets.MNIST(project_dir.joinpath(data_filepath),
+    train = datasets.MNIST(project_dir.joinpath(data_filepath),
                        download=True, train=True,
                        transform=transform)
-    _ = datasets.MNIST(project_dir.joinpath(data_filepath),
+    test = datasets.MNIST(project_dir.joinpath(data_filepath),
                        download=True, train=False,
                        transform=transform)
 
-if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main()
+    return train, test
