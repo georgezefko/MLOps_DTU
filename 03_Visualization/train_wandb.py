@@ -7,10 +7,12 @@ import argparse
 import click
 import matplotlib.pyplot as plt
 import torch
+import torchvision
 from model import MyAwesomeModel
 from torch import nn, optim
 from torchvision import datasets, transforms
-
+import wandb
+wandb.login()
 
 @click.command()
 @click.argument('data_filepath', type=click.Path(), default='data')
@@ -26,6 +28,9 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
     """ Trains the neural network using MNIST training data """
     logger = logging.getLogger(__name__)
     logger.info('Training a neural network using MNIST training data')
+    wandb.init(project='mnist-wandb-test', name='learning_rate_0_001_e_10', entity='george')
+    config = wandb.config
+    config.learning_rate = 0.001
 
     parser = argparse.ArgumentParser(description='Training arguments')
     parser.add_argument('--lr', default=0.001,type = int)
@@ -62,14 +67,33 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
     val_n = len(train_set) - train_n
     train_set, val_set = torch.utils.data.random_split(train_set,
                                                        [train_n, val_n])
+
+    train_set_targets = train_set.targets.numpy()
+
     train_loader = torch.utils.data.DataLoader(train_set,
                                                batch_size=batch_size,
                                                shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size,
                                              shuffle=True)
+    # Plot example images
+    images, labels = iter(train_loader).next()
+    for i in range(6):
+        plt.subplot(2, 3, i+1)
+        plt.imshow(images[i][0], cmap='gray')
+    wandb.log({'MNIST examples': plt})
+
+    # Plot the data distribution of the MNIST training set
+    plt.figure()
+    plt.hist(train_set_targets, density=False, bins=30)
+    plt.ylabel('Count')
+    plt.xlabel('Digit')
+    wandb.log({'MNIST data distribution': wandb.Image(plt)})
+
+    # watch model
+    wandb.watch(model, log_freq=100)
 
     # Implement the training loop
-    epochs = 30
+    epochs = 10
     train_losses, val_losses, train_accuracies, val_accuracies = [], [], [], []
     for e in range(epochs):
         train_loss = 0
@@ -131,6 +155,11 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
                         str("Validation Loss: {:.3f}.. ".format(val_losses[-1]))         +
                         str("Validation Accuracy: {:.3f}.. ".format(val_accuracies[-1])))
 
+            # Log the training and validation losses and accuracies
+            wandb.log({'Training Loss': train_losses[-1]}, step=e+1)
+            wandb.log({'Validation Loss': val_losses[-1]}, step=e+1)
+            wandb.log({'Training Accuracy': train_accuracies[-1]}, step=e+1)
+            wandb.log({'Validation Accuracy': val_accuracies[-1]}, step=e+1) 
     # Save the trained network
     torch.save(model.state_dict(), project_dir.joinpath(trained_model_filepath))
 
@@ -154,9 +183,9 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
     plt.xlabel('Epoch number')
     plt.ylabel('Loss')
     plt.legend()
-    plt.show()
-    f.savefig(project_dir.joinpath(training_figures_filepath).joinpath('Training_Loss.pdf'),
-              bbox_inches='tight')
+    
+    wandb.log({'Training loss curve (testing with matplotlib)': wandb.Image(plt)})
+    
 
     # Plot the training accuracy curve
     f = plt.figure(figsize=(12, 8))
@@ -166,8 +195,7 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
     plt.ylabel('Accuracy')
     plt.legend()
     plt.show()
-    f.savefig(project_dir.joinpath(training_figures_filepath).joinpath('Training_Accuracy.pdf'),
-              bbox_inches='tight')
+    wandb.log({'Training accuracy curve (testing with matplotlib)': wandb.Image(plt)})
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
