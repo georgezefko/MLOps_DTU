@@ -1,7 +1,0 @@
-2021-06-09 11:25:54,408 INFO    MainThread:25349 [wandb_setup.py:_flush():70] setting env: {}
-2021-06-09 11:25:54,408 INFO    MainThread:25349 [wandb_setup.py:_flush():70] multiprocessing start_methods=fork,spawn,forkserver
-2021-06-09 11:25:54,408 INFO    MainThread:25349 [wandb_setup.py:_flush():70] setting login settings: {}
-2021-06-09 11:25:54,408 INFO    MainThread:25349 [wandb_setup.py:_flush():70] setting login settings: {}
-2021-06-09 11:25:54,409 INFO    MainThread:25349 [wandb_init.py:_log_setup():318] Logging user logs to /Users/georgioszefkilis/MLOps_DTU-1/wandb/run-20210609_112554-2n72xbgh/logs/debug.log
-2021-06-09 11:25:54,409 INFO    MainThread:25349 [wandb_init.py:_log_setup():319] Logging internal logs to /Users/georgioszefkilis/MLOps_DTU-1/wandb/run-20210609_112554-2n72xbgh/logs/debug-internal.log
-2021-06-09 11:26:30,678 INFO    MainThread:25349 [wandb_init.py:teardown():178] tearing down wandb.init

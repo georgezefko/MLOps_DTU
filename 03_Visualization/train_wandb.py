@@ -28,7 +28,7 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
     """ Trains the neural network using MNIST training data """
     logger = logging.getLogger(__name__)
     logger.info('Training a neural network using MNIST training data')
-    wandb.init(project='mnist', name='learning_rate_0_001_e_10', entity='george')
+    wandb.init(project='pytorch demo')
     config = wandb.config
     config.learning_rate = 0.001
 

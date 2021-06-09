@@ -1,0 +1,22 @@
+{
+    "os": "Darwin-20.3.0-x86_64-i386-64bit",
+    "python": "3.7.6",
+    "heartbeatAt": "2021-06-09T12:29:48.368717",
+    "startedAt": "2021-06-09T12:29:41.444043",
+    "docker": null,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "codePath": "03_Visualization/train_wandb.py",
+    "program": "/Users/georgioszefkilis/MLOps_DTU-1/03_Visualization/train_wandb.py",
+    "git": {
+        "remote": "https://github.com/georgezefko/MLOps_DTU.git",
+        "commit": "684fa365694abed5cd7b0efd2d4cb0c2ac4d5b5b"
+    },
+    "email": "46191927+georgezefko@users.noreply.github.com",
+    "root": "/Users/georgioszefkilis/MLOps_DTU-1",
+    "host": "Georgioss-MacBook-Pro.local",
+    "username": "georgioszefkilis",
+    "executable": "/Users/georgioszefkilis/anaconda3/anaconda3/bin/python"
+}
