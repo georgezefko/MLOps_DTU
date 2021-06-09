@@ -7,9 +7,11 @@ import argparse
 import click
 import matplotlib.pyplot as plt
 import torch
+import torchvision
 from model import MyAwesomeModel
 from torch import nn, optim
 from torchvision import datasets, transforms
+from torch.utils.tensorboard import SummaryWriter
 
 
 @click.command()
@@ -26,6 +28,7 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
     """ Trains the neural network using MNIST training data """
     logger = logging.getLogger(__name__)
     logger.info('Training a neural network using MNIST training data')
+    writer = SummaryWriter()
 
     parser = argparse.ArgumentParser(description='Training arguments')
     parser.add_argument('--lr', default=0.001,type = int)
@@ -62,14 +65,31 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
     val_n = len(train_set) - train_n
     train_set, val_set = torch.utils.data.random_split(train_set,
                                                        [train_n, val_n])
+
+    train_set_targets = train_set.targets.numpy()
+
     train_loader = torch.utils.data.DataLoader(train_set,
                                                batch_size=batch_size,
                                                shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size,
                                              shuffle=True)
+    
+    # Plot example images
+    images, labels = iter(train_loader).next()
+    for i in range(6):
+        plt.subplot(2, 3, i+1)
+        plt.imshow(images[i][0], cmap='gray')
+    grid = torchvision.utils.make_grid(images)
+    writer.add_image('MNIST examples', grid, 0)
+
+    # Plot the data distribution of the MNIST training set
+    writer.add_histogram('MNIST data distribution', train_set_targets)
+
+    # Add graph data to summary
+    writer.add_graph(model, images)
 
     # Implement the training loop
-    epochs = 30
+    epochs = 10
     train_losses, val_losses, train_accuracies, val_accuracies = [], [], [], []
     for e in range(epochs):
         train_loss = 0
@@ -130,6 +150,12 @@ def main(data_filepath, trained_model_filepath, training_statistics_filepath,
                         str("Training Accuracy: {:.3f}.. ".format(train_accuracies[-1])) +
                         str("Validation Loss: {:.3f}.. ".format(val_losses[-1]))         +
                         str("Validation Accuracy: {:.3f}.. ".format(val_accuracies[-1])))
+            
+            # Write the training 
+            writer.add_scalar('Loss/train', train_loss/len(train_loader), e+1)
+            writer.add_scalar('Loss/validation', val_loss/len(val_loader), e+1)
+            writer.add_scalar('Accuracy/train', train_correct/len(train_set), e+1)
+            writer.add_scalar('Accuracy/validation', val_correct/len(val_set), e+1)
 
     # Save the trained network
     torch.save(model.state_dict(), project_dir.joinpath(trained_model_filepath))
