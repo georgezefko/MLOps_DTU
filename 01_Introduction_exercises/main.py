@@ -123,7 +123,7 @@ class TrainOREvaluate(object):
         plt.ylabel('Loss')
         plt.legend()
         plt.show()
-        f.savefig('/Users/georgioszefkilis/dtu_mlops-new/01_introduction/final_exercise/Training_Loss.pdf', bbox_inches='tight')
+        f.savefig('/Users/georgioszefkilis/MLOps_DTU-1/01_Introduction_exercies/Training_Loss.pdf', bbox_inches='tight')
         
         # Plot the training accuracy curve
         f = plt.figure(figsize=(12, 8))
@@ -133,7 +133,7 @@ class TrainOREvaluate(object):
         plt.ylabel('Accuracy')
         plt.legend()
         plt.show()
-        f.savefig('/Users/georgioszefkilis/dtu_mlops-new/01_introduction/final_exercise/Training_Accuracy.pdf', bbox_inches='tight')
+        f.savefig('/Users/georgioszefkilis/MLOps_DTU-1/01_Introduction_exercises/Training_Accuracy.pdf', bbox_inches='tight')
         
                 
         
