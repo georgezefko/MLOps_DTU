@@ -26,6 +26,13 @@ class MyAwesomeModel(nn.Module):
     def forward(self, x):
         """ Forward pass through the network, returns the output logits """
 
+        #Chack that there are batch, channel, width and height dimensions
+        if x.ndim != 4:
+            raise ValueError('Expected input to be a 4D tensor')
+        # Check that the number of channals is one and width=height=28
+        if x.shape[1] != 1 or x.shape[2] != 28 or x.shape[3] != 28:
+            raise ValueError('Expected each sample to have the shape 1x28x28')
+
         # Flattening input tensor except for the minibatch dimension
         x = x.view(x.shape[0], -1)
 
