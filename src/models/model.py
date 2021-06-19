@@ -26,7 +26,7 @@ class MyAwesomeModel(nn.Module):
     def forward(self, x):
         """ Forward pass through the network, returns the output logits """
 
-        #Chack that there are batch, channel, width and height dimensions
+        #Check that there are batch, channel, width and height dimensions
         if x.ndim != 4:
             raise ValueError('Expected input to be a 4D tensor')
         # Check that the number of channals is one and width=height=28
