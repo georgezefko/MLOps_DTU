@@ -1,7 +1,7 @@
 import logging
 import pickle
 from pathlib import Path
-
+import copy
 import matplotlib.pyplot as plt
 import torch
 from src.models.model import MyAwesomeModel
@@ -10,19 +10,22 @@ from torchvision import datasets, transforms
 import torchdrift
 import sklearn.manifold
 import math
+from matplotlib import pyplot
 import click
 
-# @click.command()
-# @click.argument('data_filepath', type=click.Path(), default='data')
-# @click.argument('trained_model_filepath', type=click.Path(),default='models/trained_model.pth')
+@click.command()
+@click.argument('data_filepath', type=click.Path(), default='data')
+@click.argument('trained_model_filepath', type=click.Path(),default='models/trained_model.pth')
+@click.argument('training_figures_filepath', type=click.Path(),
+                default='reports/figures/')
 
 
 
-def corruption_function(x: torch.Tensor):
-    return torchdrift.data.functional.gaussian_blur(x, severity=2)
 
 
-def drift(data_filepath, trained_model_filepath):
+
+
+def drift(data_filepath, trained_model_filepath,training_figures_filepath):
     
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
@@ -58,30 +61,16 @@ def drift(data_filepath, trained_model_filepath):
                                              shuffle=True)
 
     #show inputs
-    inputs, _ = next(iter(val_loader(shuffle=True)))
+    inputs, _ = next(iter(val_loader))
     inputs_ood = corruption_function(inputs)
 
-    N = 6
-    model.eval()
-    inps = torch.cat([inputs[:N], inputs_ood[:N]])
-    model.cpu()
-    predictions = model.predict(inps).max(1).indices
-
-    predicted_labels = [["ant","bee"][p] for p in predictions]
-    pyplot.figure(figsize=(15, 5))
-    for i in range(2 * N):
-        pyplot.subplot(2, N, i + 1)
-        pyplot.title(predicted_labels[i])
-        pyplot.imshow(inps[i].permute(1, 2, 0))
-        pyplot.xticks([])
-        pyplot.yticks([])
 
     feature_extractor = copy.deepcopy(model)
     feature_extractor.classifier = torch.nn.Identity()
 
     #drift detector
     drift_detector = torchdrift.detectors.KernelMMDDriftDetector()
-    torchdrift.utils.fit(train_loader, feature_extractor, drift_detector)
+    torchdrift.utils.fit(train_loader, feature_extractor, drift_detector, num_batches= 10)
 
     drift_detection_model = torch.nn.Sequential(
     feature_extractor,   drift_detector)
@@ -95,22 +84,32 @@ def drift(data_filepath, trained_model_filepath):
     N_base = drift_detector.base_outputs.size(0)
     mapper = sklearn.manifold.Isomap(n_components=2)
     base_embedded = mapper.fit_transform(drift_detector.base_outputs)
-    features_embedded = mapper.transform(features)
+    features_embedded = mapper.transform(features.detach().numpy())
+    f = plt.figure(figsize=(12, 8))
     pyplot.scatter(base_embedded[:, 0], base_embedded[:, 1], s=2, c='r')
     pyplot.scatter(features_embedded[:, 0], features_embedded[:, 1], s=4)
     pyplot.title(f'score {score:.2f} p-value {p_val:.2f}')
+    f.savefig(project_dir.joinpath(training_figures_filepath).joinpath('drift.pdf'),
+              bbox_inches='tight')
+    
 
 
     features = feature_extractor(inputs_ood)
     score = drift_detector(features)
     p_val = drift_detector.compute_p_value(features)
 
-    features_embedded = mapper.transform(features)
+    features_embedded = mapper.transform(features.detach().numpy())
+    f = plt.figure(figsize=(12, 8))
     pyplot.scatter(base_embedded[:, 0], base_embedded[:, 1], s=2, c='r')
     pyplot.scatter(features_embedded[:, 0], features_embedded[:, 1], s=4)
     pyplot.title(f'score {score:.2f} p-value {p_val:.2f}')
+    f.savefig(project_dir.joinpath(training_figures_filepath).joinpath('drift2.pdf'),
+              bbox_inches='tight')
 
-# if __name__ == '__main__':
-#     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-#     logging.basicConfig(level=logging.INFO, format=log_fmt)
-#     drift()
+def corruption_function(x: torch.Tensor):
+    return torchdrift.data.functional.gaussian_blur(x, severity=2)
+
+if __name__ == '__main__':
+    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+    drift()
