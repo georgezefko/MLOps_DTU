@@ -1,0 +1,6 @@
+data_filepath: '/Users/georgioszefkilis/MLOps_DTU-1/data'
+trained_model_filepath: 'models/'
+training_statistics_filepath: '/Users/georgioszefkilis/MLOps_DTU-1/data/processed'
+training_figures_filepath: '/Users/georgioszefkilis/MLOps_DTU-1/reports/figures'
+epochs: 3
+lr: 0.001

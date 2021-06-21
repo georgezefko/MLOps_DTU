@@ -7,49 +7,59 @@ import torch
 from src.models.model import MyAwesomeModel
 from torch import nn, optim
 from torchvision import datasets, transforms
+from omegaconf import OmegaConf
+import hydra
 
 
-def train_model(data_filepath, trained_model_filepath,
-                training_statistics_filepath, training_figures_filepath,
-                epochs, lr):
-    """ Trains the neural network using MNIST training data and
-        returns a dictionary with the training and validation 
-        losses and accuracies """
+@hydra.main(config_name="train_config.yaml")
+def train_model(config):
+    """Trains the neural network using MNIST training data and
+    returns a dictionary with the training and validation
+    losses and accuracies"""
+    print(f"configuration: \n {OmegaConf.to_yaml(config)}")
+    hparams = config
 
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=log_fmt)
     logger = logging.getLogger(__name__)
-    logger.info('Training a neural network using MNIST training data')
+    logger.info("Training a neural network using MNIST training data")
 
     # Create the network and define the loss function and optimizer
     model = MyAwesomeModel()
     criterion = nn.NLLLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=hparams["lr"])
 
     # Define a transform to normalize the data
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize((0.5,), (0.5,)), ])
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,)),
+        ]
+    )
 
     # Divide the training dataset into two parts:
     #  a training set and a validation set
     project_dir = Path(__file__).resolve().parents[2]
-    train_set = datasets.MNIST(project_dir.joinpath(data_filepath),
-                               download=False, train=True,
-                               transform=transform)
+    train_set = datasets.MNIST(
+        project_dir.joinpath(hparams["data_filepath"]),
+        download=False,
+        train=True,
+        transform=transform,
+    )
     batch_size = 64
-    train_n = int(0.7*len(train_set))
+    train_n = int(0.7 * len(train_set))
     val_n = len(train_set) - train_n
-    train_set, val_set = torch.utils.data.random_split(train_set,
-                                                       [train_n, val_n])
-    train_loader = torch.utils.data.DataLoader(train_set,
-                                               batch_size=batch_size,
-                                               shuffle=True)
-    val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size,
-                                             shuffle=True)
+    train_set, val_set = torch.utils.data.random_split(train_set, [train_n, val_n])
+    train_loader = torch.utils.data.DataLoader(
+        train_set, batch_size=batch_size, shuffle=True
+    )
+    val_loader = torch.utils.data.DataLoader(
+        val_set, batch_size=batch_size, shuffle=True
+    )
 
     # Implement the training loop
     train_losses, val_losses, train_accuracies, val_accuracies = [], [], [], []
-    for e in range(epochs):
+    for e in range(hparams["epochs"]):
         train_loss = 0
         train_correct = 0
 
@@ -85,7 +95,7 @@ def train_model(data_filepath, trained_model_filepath,
 
             # Turn off gradients for validation, saves memory and computations
             with torch.no_grad():
-                model.eval()     # Sets the model to evaluation mode
+                model.eval()  # Sets the model to evaluation mode
                 for images, labels in val_loader:
                     # Forward pass and compute loss
                     log_ps = model(images)
@@ -98,63 +108,75 @@ def train_model(data_filepath, trained_model_filepath,
                     val_correct += equals.type(torch.FloatTensor).sum().item()
 
             # Store and print losses and accuracies
-            train_losses.append(train_loss/len(train_loader))
-            train_accuracies.append(train_correct/len(train_set))
-            val_losses.append(val_loss/len(val_loader))
-            val_accuracies.append(val_correct/len(val_set))
+            train_losses.append(train_loss / len(train_loader))
+            train_accuracies.append(train_correct / len(train_set))
+            val_losses.append(val_loss / len(val_loader))
+            val_accuracies.append(val_correct / len(val_set))
 
-            logger.info(str("Epoch: {}/{}.. ".format(e+1, epochs)) +
-                        str("Training Loss: {:.3f}.. ".format(train_losses[-1])) +
-                        str("Training Accuracy: {:.3f}.. ".format(train_accuracies[-1])) +
-                        str("Validation Loss: {:.3f}.. ".format(val_losses[-1]))         +
-                        str("Validation Accuracy: {:.3f}.. ".format(val_accuracies[-1])))
+            logger.info(
+                str("Epoch: {}/{}.. ".format(e + 1, hparams["epochs"]))
+                + str("Training Loss: {:.3f}.. ".format(train_losses[-1]))
+                + str("Training Accuracy: {:.3f}.. ".format(train_accuracies[-1]))
+                + str("Validation Loss: {:.3f}.. ".format(val_losses[-1]))
+                + str("Validation Accuracy: {:.3f}.. ".format(val_accuracies[-1]))
+            )
 
     # Save the trained network
-    torch.save(model.state_dict(),
-               project_dir.joinpath(trained_model_filepath))
+    torch.save(
+        model.state_dict(), project_dir.joinpath(hparams["trained_model_filepath"])
+    )
 
     # Save the training and validation losses and accuracies as a dictionary
     train_val_dict = {
         "train_losses": train_losses,
         "train_accuracies": train_accuracies,
         "val_losses": val_losses,
-        "val_accuracies": val_accuracies
+        "val_accuracies": val_accuracies,
     }
 
-    with open(project_dir.joinpath(training_statistics_filepath).joinpath('train_val_dict.pickle'), 'wb') as f:
+    with open(
+        project_dir.joinpath(hparams["training_statistics_filepath"]).joinpath(
+            "train_val_dict.pickle"
+        ),
+        "wb",
+    ) as f:
         # Pickle the 'train_val_dict' dictionary using
         #  the highest protocol available
         pickle.dump(train_val_dict, f, pickle.HIGHEST_PROTOCOL)
 
     # Plot the training loss curve
     f = plt.figure(figsize=(12, 8))
-    plt.plot(train_losses, label='Training loss')
-    plt.plot(val_losses,   label='Validation loss')
-    plt.xlabel('Epoch number')
-    plt.ylabel('Loss')
+    plt.plot(train_losses, label="Training loss")
+    plt.plot(val_losses, label="Validation loss")
+    plt.xlabel("Epoch number")
+    plt.ylabel("Loss")
     plt.legend()
-    f.savefig(project_dir.joinpath(training_figures_filepath).joinpath('Training_Loss.pdf'),
-              bbox_inches='tight')
+    f.savefig(
+        project_dir.joinpath(hparams["training_figures_filepath"]).joinpath(
+            "Training_Loss.pdf"
+        ),
+        bbox_inches="tight",
+    )
 
     # Plot the training accuracy curve
     f = plt.figure(figsize=(12, 8))
-    plt.plot(train_accuracies, label='Training accuracy')
-    plt.plot(val_accuracies,   label='Validation accuracy')
-    plt.xlabel('Epoch number')
-    plt.ylabel('Accuracy')
+    plt.plot(train_accuracies, label="Training accuracy")
+    plt.plot(val_accuracies, label="Validation accuracy")
+    plt.xlabel("Epoch number")
+    plt.ylabel("Accuracy")
     plt.legend()
-    f.savefig(project_dir.joinpath(training_figures_filepath).joinpath('Training_Accuracy.pdf'),
-              bbox_inches='tight')
+    f.savefig(
+        project_dir.joinpath(hparams["training_figures_filepath"]).joinpath(
+            "Training_Accuracy.pdf"
+        ),
+        bbox_inches="tight",
+    )
 
     return train_val_dict
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+if __name__ == "__main__":
+    log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+    train_model()
 # %%
