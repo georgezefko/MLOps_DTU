@@ -11,13 +11,13 @@ from omegaconf import OmegaConf
 import hydra
 
 
-@hydra.main(config_name="train_config.yaml")
+@hydra.main(config_name="default_config.yaml")
 def train_model(config):
     """Trains the neural network using MNIST training data and
     returns a dictionary with the training and validation
     losses and accuracies"""
     print(f"configuration: \n {OmegaConf.to_yaml(config)}")
-    hparams = config
+    hparams = config.experiment
 
     log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=log_fmt)
@@ -25,7 +25,7 @@ def train_model(config):
     logger.info("Training a neural network using MNIST training data")
 
     # Create the network and define the loss function and optimizer
-    model = MyAwesomeModel()
+    model = MyAwesomeModel(hparams["dropout"])
     criterion = nn.NLLLoss()
     optimizer = optim.Adam(model.parameters(), lr=hparams["lr"])
 
